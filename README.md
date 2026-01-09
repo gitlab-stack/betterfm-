@@ -94,7 +94,8 @@ BetterFM/
 ├── Services/
 │   ├── MusicPlayerService.swift    # MusicKit integration
 │   ├── LastFMService.swift         # Last.fm API client
-│   └── ScrobblingService.swift     # Scrobbling coordination
+│   ├── ScrobblingService.swift     # Scrobbling coordination
+│   └── KeychainService.swift       # Secure credential storage
 └── Views/
     ├── LoginView.swift             # Last.fm authentication
     ├── NowPlayingView.swift        # Current track display
@@ -121,7 +122,13 @@ BetterFM solves these problems by using Apple's official MusicKit framework to d
 
 ## Security Note
 
-Your Last.fm credentials are stored securely in UserDefaults on your device. The app uses Last.fm's mobile authentication API with hashed passwords (MD5) as required by their API specification. Session keys are persisted locally for convenience.
+BetterFM takes security seriously:
+
+- **Keychain Storage**: Your Last.fm session credentials are stored securely in the iOS Keychain, not in UserDefaults. The Keychain is encrypted and protected by the iOS operating system.
+- **Password Hashing**: The app uses Last.fm's mobile authentication API with MD5-hashed passwords as required by their API specification. Your actual password is never stored on the device.
+- **Secure Transport**: All API communications use HTTPS exclusively.
+- **Access Protection**: Keychain items are configured with `kSecAttrAccessibleAfterFirstUnlock`, meaning they're only accessible after the device has been unlocked once after boot.
+- **No Third-Party Analytics**: The app doesn't include any third-party analytics or tracking frameworks.
 
 ## Contributing
 

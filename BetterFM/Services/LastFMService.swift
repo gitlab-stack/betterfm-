@@ -12,6 +12,8 @@ class LastFMService {
     private let apiKey = "YOUR_LASTFM_API_KEY"
     private let apiSecret = "YOUR_LASTFM_API_SECRET"
     private let baseURL = "https://ws.audioscrobbler.com/2.0/"
+    private let keychain = KeychainService()
+    private let sessionKey_KeychainKey = "lastfm_session"
 
     private var sessionKey: String?
     private var username: String?
@@ -167,25 +169,34 @@ class LastFMService {
     }
 
     func saveSession(_ session: LastFMSession) {
-        if let encoded = try? JSONEncoder().encode(session) {
-            UserDefaults.standard.set(encoded, forKey: "lastfm_session")
+        do {
+            try keychain.save(session, forKey: sessionKey_KeychainKey)
+        } catch {
+            print("Failed to save session to Keychain: \(error.localizedDescription)")
         }
     }
 
     @discardableResult
     func loadSession() -> LastFMSession? {
-        guard let data = UserDefaults.standard.data(forKey: "lastfm_session"),
-              let session = try? JSONDecoder().decode(LastFMSession.self, from: data) else {
+        do {
+            let session = try keychain.load(forKey: sessionKey_KeychainKey, as: LastFMSession.self)
+            self.sessionKey = session.sessionKey
+            self.username = session.username
+            return session
+        } catch KeychainError.itemNotFound {
+            return nil
+        } catch {
+            print("Failed to load session from Keychain: \(error.localizedDescription)")
             return nil
         }
-
-        self.sessionKey = session.sessionKey
-        self.username = session.username
-        return session
     }
 
     func logout() {
-        UserDefaults.standard.removeObject(forKey: "lastfm_session")
+        do {
+            try keychain.delete(forKey: sessionKey_KeychainKey)
+        } catch {
+            print("Failed to delete session from Keychain: \(error.localizedDescription)")
+        }
         sessionKey = nil
         username = nil
     }
